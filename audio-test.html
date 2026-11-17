@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MusicStudio Audio Test</title>
+<style>
+body{
+ background:#10131d;color:white;font-family:sans-serif;
+ text-align:center;padding:35px 18px;
+}
+button{
+ background:#6575ff;color:white;border:0;
+ border-radius:12px;padding:18px 28px;
+ font-size:18px;margin:12px;
+}
+#status{color:#65e0bd;margin-top:25px;line-height:1.8}
+</style>
+</head>
+<body>
+<h2>MusicStudio 音频测试</h2>
+<p>点击下面的按钮测试 iPhone 音频</p>
+<button id="play">播放测试音</button>
+<button id="stop">停止</button>
+<div id="status">等待测试</div>
+<script>
+let ctx=null;
+let oscillator=null;
+let gain=null;
+
+document.getElementById("play").addEventListener("click",async()=>{
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)throw new Error("浏览器不支持 Web Audio");
+
+  if(!ctx){
+   ctx=new AC();
+  }
+
+  await ctx.resume();
+
+  if(oscillator){
+   try{oscillator.stop()}catch(e){}
+  }
+
+  oscillator=ctx.createOscillator();
+  gain=ctx.createGain();
+
+  oscillator.type="sine";
+  oscillator.frequency.value=440;
+  gain.gain.value=0.15;
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start();
+
+  document.getElementById("status").innerText=
+   "音频状态："+ctx.state+
+   "\n采样率："+ctx.sampleRate+
+   "\n如果听到声音，说明音频引擎正常。";
+ }catch(e){
+  document.getElementById("status").innerText=
+   "音频错误："+e.message;
+ }
+});
+
+document.getElementById("stop").onclick=()=>{
+ if(oscillator){
+  try{oscillator.stop()}catch(e){}
+  oscillator=null;
+ }
+ document.getElementById("status").innerText="已停止";
+};
+</script>
+</body>
+</html>
